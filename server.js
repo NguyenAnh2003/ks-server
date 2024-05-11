@@ -7,16 +7,30 @@ server.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}`);
 });
 
+
+var currentChildId;
 socketIO.on('connection', (socket) => {
+  
   console.log(`⚡: ${socket.id} user just connected!`);
 
-  socket.on('location', (location) => {
-    console.log(location);
-    socket.emit("location",location)
+  socket.on('requestLocation', (childId) => {
+    currentChildId=childId;
+    console.log("request location child id sv "+childId);
+    socketIO.sockets.emit('requestLocationToSpecificDevice',childId)
   });
-  
+
+  socket.on('locationChild', (locationChild,childId) => {
+    console.log('Child id received:', childId);
+    console.log('Location update received:', locationChild);
+    console.log(currentChildId);
+    console.log(childId);
+    if(childId==currentChildId){
+      socketIO.sockets.emit('locationUpdateToClient',locationChild)
+    }
+  });
+
   socket.on('disconnect', () => {
     socket.disconnect()
-    console.log('🔥: A user disconnected');
+    console.log(`🔥: User ${socket.id} disconnected`);
   });
 });
